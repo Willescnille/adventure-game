@@ -28,6 +28,7 @@ public class playerMovement : MonoBehaviour
 
     private bool doubleJump;
     public bool havedoublejump = false;
+    public bool havewalljump = false;   
 
     private bool CanDash = true;
     private bool IsDashing;
@@ -107,34 +108,35 @@ public class playerMovement : MonoBehaviour
  
     private void Move()
     {
-        if (!isWallSliding)
-        {
-            rb.velocity = new Vector2(dirx * moveSpeed, rb.velocity.y);
-
-            if (dirx > 0 && !facingRight)
+        
+            if (!isWallSliding)
             {
-                WallCheckPoint.localPosition = new Vector2(WallCheckPoint.localPosition.x * -1, WallCheckPoint.localPosition.y);
+                rb.velocity = new Vector2(dirx * moveSpeed, rb.velocity.y);
 
-            }
-            else if (dirx < 0 && facingRight)
-            {
-                WallCheckPoint.localPosition = new Vector2(WallCheckPoint.localPosition.x * -1, WallCheckPoint.localPosition.y);
+                if (dirx > 0 && !facingRight)
+                {
+                    WallCheckPoint.localPosition = new Vector2(WallCheckPoint.localPosition.x * -1, WallCheckPoint.localPosition.y);
 
-            }
+                }
+                else if (dirx < 0 && facingRight)
+                {
+                    WallCheckPoint.localPosition = new Vector2(WallCheckPoint.localPosition.x * -1, WallCheckPoint.localPosition.y);
 
-            if (dirx > 0)
-            {
+                }
 
-                sprite.flipX = false;
-                facingRight = true;
-            }
-            else if (dirx < 0)
-            {
+                if (dirx > 0)
+                {
 
-                facingRight = false;
-                sprite.flipX = true;
-            }
+                    sprite.flipX = false;
+                    facingRight = true;
+                }
+                else if (dirx < 0)
+                {
 
+                    facingRight = false;
+                    sprite.flipX = true;
+                }
+            
 
         }
     }
@@ -148,31 +150,37 @@ public class playerMovement : MonoBehaviour
 
     private void WallJump()
     {
-        JumpSoundEffect.Play();
-        int wallDirection = sprite.flipX ? 1 : -1; // Determine jump direction
-        rb.velocity = new Vector2(wallJumpForce.x * wallDirection, wallJumpForce.y);
-        isWallSliding = false;
+        if (havewalljump)
+        {
+            JumpSoundEffect.Play();
+            int wallDirection = sprite.flipX ? 1 : -1; // Determine jump direction
+            rb.velocity = new Vector2(wallJumpForce.x * wallDirection, wallJumpForce.y);
+            isWallSliding = false;
+        }
     }
 
     private void CheckWallSliding()
     {
-        if (facingRight)
+        if (havewalljump)
         {
-            isTouchingWall = Physics2D.OverlapBox(WallCheckPoint.position, WallCheckSize, 0f, WallLayer);
-        }
-        else
-        {
-            isTouchingWall = Physics2D.OverlapBox(WallCheckPoint.position, WallCheckSize, 0f, WallLayer);
-        }
+            if (facingRight)
+            {
+                isTouchingWall = Physics2D.OverlapBox(WallCheckPoint.position, WallCheckSize, 0f, WallLayer);
+            }
+            else
+            {
+                isTouchingWall = Physics2D.OverlapBox(WallCheckPoint.position, WallCheckSize, 0f, WallLayer);
+            }
 
-        if (isTouchingWall && !isGrounded )
-        {
-            isWallSliding = true;
-            rb.velocity = new Vector2(rb.velocity.x, -wallSlideSpeed); // Limit downward speed
-        }
-        else
-        {
-            isWallSliding = false;
+            if (isTouchingWall && !isGrounded)
+            {
+                isWallSliding = true;
+                rb.velocity = new Vector2(rb.velocity.x, -wallSlideSpeed); // Limit downward speed
+            }
+            else
+            {
+                isWallSliding = false;
+            }
         }
     }
 
@@ -245,7 +253,13 @@ public class playerMovement : MonoBehaviour
             Destroy(collision.gameObject);
             havedoublejump = true;
         }
+        if (collision.gameObject.CompareTag("WallJump"))
+        {
+            Destroy(collision.gameObject);
+            havewalljump = true;
+        }
     }
+  
 
     private void OnDrawGizmos()
     {
